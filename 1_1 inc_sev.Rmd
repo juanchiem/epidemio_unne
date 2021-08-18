@@ -151,16 +151,19 @@ oli_prev %>%
 
 Calculamos ambas severidades vistas en la introducción teórica
 
+NOTA: en el teórico la sev_cond daba "NaN" en aquellos casos en que todos los arboles tenian sev=0, y en el filtrado `sev[which(sev > 0)]`
+el vector quedaba vacío. 
+
 ```{r}
 oli_long %>% 
   group_by(year, loc, farm) %>%
   summarise(
-    n = sum(!is.na(sev)),
-    sev_cond = mean(sev[which(!is.na(sev) > 0)]),
-    sev_media = mean(sev, na.rm=TRUE)
-    ) %>% 
+    sev_media = mean(sev, na.rm=TRUE), 
+    sev_cond =mean(sev[which(sev > 0)])) %>% 
   ungroup %>% 
+  mutate_all(~replace(., is.nan(.), 0)) %>% 
   arrange(loc, year) -> oli_sev
+oli_sev
 ```
 
 Print `oli_sev`
@@ -204,6 +207,12 @@ soja %>%
     names_sep = "_") -> soja_long
 ```
 
+print `soja_long`
+
+```{r}
+soja_long
+```
+
 Gráfico exploratorio de sev
 
 ```{r}
@@ -222,6 +231,5 @@ soja_long %>%
   aes(x=fungic, y=yield)+
   geom_boxplot(width=.2) + 
   geom_point(aes(col=factor(bk)))
-
 ```
 

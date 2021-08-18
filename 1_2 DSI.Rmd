@@ -15,22 +15,22 @@ options(width = 90)
 ```{r, include=FALSE}
 pacman::p_load(tidyverse, emmeans)
 load("data/data.RData")
-source(here::here('my_themes.R'))
 ```
-
 
 ## Poroto/sclerotinia 
 
 ```{r}
-poroto_dsi <- poroto %>% 
+poroto %>% 
   mutate(diseased = rowSums(dplyr::select(., matches('1|2|3|4')))) %>% 
   mutate(inc = diseased/n*100) %>% 
   mutate(
     dsi_eq1 = (1*class_1+2*class_2+3*class_3+4*class_4)/(n*4) *100,
     dsi_eq2 = (1*class_1+2*class_2+3*class_3+4*class_4)/n,
     dsi_midpoint = (.13*class_1 +.375*class_2 + .625*class_3 + .875*class_4)/n*100)%>% 
-  mutate_at(vars(trt, rep), as.factor)
+  mutate_at(vars(trt, rep), as.factor) -> poroto_dsi
 ```
+
+Print 
 
 ```{r}
 poroto_dsi
