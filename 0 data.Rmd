@@ -1,0 +1,46 @@
+---
+title: "Datasets"
+output:
+  rmdformats::robobook:
+    highlight: kate
+---
+
+```{r echo=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+```
+
+```{r eval=FALSE}
+pacman::p_load(tidyverse, googlesheets4, janitor)
+# gs4_auth(email = "edwardsmolina@gmail.com")
+gs4_deauth()
+datasets <- gs4_get("https://docs.google.com/spreadsheets/d/16FUAtd-u50sU2si0Ot7j9Ueou7qwlGt5t9NkAdKwlBM/edit?usp=sharing")
+```
+
+```{r eval=FALSE}
+olivo <- read_sheet(datasets, sheet = "olivo", 
+                    guess_max = 10000, skip=0) 
+```
+
+```{r eval=FALSE}
+soja <- read_sheet(datasets, sheet = "soja", 
+                    guess_max = 10000, skip=0) 
+```
+
+```{r}
+canola <- read_sheet(datasets, sheet = "canola", 
+                    guess_max = 10000, skip=0) %>% 
+  janitor::clean_names() 
+```
+
+```{r}
+cebada <- read.csv("https://raw.githubusercontent.com/juanchiem/agro_data/master/multiple_dis_metric.csv",  sep = ",") %>% 
+  dplyr::select(trt, bk, matches("_sev|_inc"))
+```
+
+```{r}
+poroto <- read_sheet(datasets, sheet = "poroto", guess_max = 10000, skip=0)
+```
+
+```{r}
+save(olivo, soja, canola, cebada, poroto, file="data/data.RData")
+```

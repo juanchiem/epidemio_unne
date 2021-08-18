@@ -1,0 +1,93 @@
+---
+title: "Indice de severidad"
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      eval=FALSE, 
+                      fig.width = 12, 
+                      fig.height = 8)
+options(width = 90)
+```
+
+```{r, include=FALSE}
+pacman::p_load(tidyverse, emmeans)
+load("data/data.RData")
+source(here::here('my_themes.R'))
+```
+
+
+## Poroto/sclerotinia 
+
+```{r}
+poroto_dsi <- poroto %>% 
+  mutate(diseased = rowSums(dplyr::select(., matches('1|2|3|4')))) %>% 
+  mutate(inc = diseased/n*100) %>% 
+  mutate(
+    dsi_eq1 = (1*class_1+2*class_2+3*class_3+4*class_4)/(n*4) *100,
+    dsi_eq2 = (1*class_1+2*class_2+3*class_3+4*class_4)/n,
+    dsi_midpoint = (.13*class_1 +.375*class_2 + .625*class_3 + .875*class_4)/n*100)%>% 
+  mutate_at(vars(trt, rep), as.factor)
+```
+
+```{r}
+poroto_dsi
+```
+
+# Model fitting 
+
+```{r}
+mod0 <- lm(dsi_midpoint ~ trt, data = poroto_dsi)
+par(mfrow = c(1, 2))
+plot(mod0, which = c(1,2))
+```
+
+```{r}
+MASS::boxcox(mod0)
+plot(fitted(mod0), resid(mod0), xlab = "Fitted", ylab = "Residuals")
+# abline(h = 0, lty = 2, col = "darkorange", lwd = 2)
+# plot(mod0, which = c(1))
+```
+
+
+```{r}
+mod1 <- lm(sqrt(dsi_midpoint) ~ factor(trt), data = poroto_dsi)
+par(mfrow = c(1, 2))
+plot(mod1, which = c(1,2))
+MASS::boxcox(mod1)
+```
+
+```{r}
+bctran <- make.tran("boxcox", 0.368)
+mod2 <- with(bctran,
+            lm(linkfun(dsi_midpoint) ~ trt, data = poroto_dsi))
+par(mfrow = c(1, 2))
+plot(mod2, which = c(1,2))
+```
+
+```{r}
+asin_tran <- make.tran("asin.sqrt", 100)
+mod3 <- with(asin_tran,
+            lm(linkfun(dsi_midpoint) ~ trt, data = poroto_dsi)
+            )
+par(mfrow = c(1, 2))
+plot(mod3, which = c(1,2))
+emmeans(mod3, ~ trt, type = "response")
+
+```
+
+
+```{r}
+poroto_dsi_p = transform(poroto_dsi, p = (dsi_midpoint/100))
+mod4 = lm(log(p/(1-p)) ~ factor(trt), data = poroto_dsi_p)
+emmeans(mod4, ~trt, 
+        tran = "logit", at = list(dsi_midpoint = 3:81), 
+        type = "response")
+```
+
+```{r}
+AIC(mod1,mod2, mod3, mod4)
+```
+
