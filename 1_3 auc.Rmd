@@ -16,9 +16,9 @@ y = c(1,2,3,10)
 
 # Area under the disease progress curve (AUDPC) - Absoluta
 
-
 ```{r}
-audpc_1  <- AUDPC(time = time, y = y, y_proportion = FALSE, 
+audpc_1  <- AUDPC(time = time, y = y, 
+                  y_proportion = FALSE, 
                   type = "absolute")
 audpc_1
 ```
@@ -44,6 +44,7 @@ sAUDPS
 ```
 
 AUDPC relativa
+
 ```{r}
 audpc_max <- 10*(4-1)
 (rAUDPC <- audpc_1/audpc_max)
@@ -67,15 +68,17 @@ Dataset `canola`
 Experimento de canola conducido en Balcarce, donde fueron testeados 10 fungicidas (mas un control sin protección con fungicida) con 3 bloques en el cual se registró el progreso de la incidencia de manchas foliares de Phoma lingam a través del tiempo (tiempo térmico desde la detección de la primera mancha)
 
 ```{r}
-canola
+canola %>% 
+  janitor::tabyl(trt, bk)
 ```
 
 ```{r}
 canola %>%  
-  pivot_longer(inc_15:inc_248, 
-         names_to = "tt", 
-         values_to = "inc", 
-         names_prefix = "inc_")-> can_long
+  pivot_longer(
+    cols= inc_15:inc_248, 
+    names_to = "tt", 
+    values_to = "inc", 
+    names_prefix = "inc_")-> can_long
 ```
 
 ```{r}
@@ -109,6 +112,13 @@ can_auc
 ```{r}
 can_auc <- can_auc %>% 
   mutate_at(vars(trt, bk), as.factor)
+```
+
+```{r}
+can_auc %>% 
+  ggplot()+
+  aes(y=auc,x=trt, col=bk)+
+  geom_point()
 ```
 
 # Model fitting 
@@ -154,7 +164,8 @@ em <- emmeans(mod_canola1, ~trt, type = "response")
 Hacemos las comparaciones multiples segun test de Tukey
 
 ```{r}
-res <- multcomp::cld(em, Letters = letters, 
+res <- multcomp::cld(em, 
+                     Letters = letters, 
                      alpha = .05, 
                      reversed = F) 
 res
@@ -166,7 +177,6 @@ plot(res, alpha =0.5) +
                filter(trt==1) %>% 
                pull(response), 
              linetype = 2, col ="gray50")+
-  coord_flip()+
   geom_point(data = can_auc, 
              aes(x = auc, 
                  y = trt), pch=21, 
@@ -177,8 +187,10 @@ plot(res, alpha =0.5) +
                 label = .group),
             size = 4)+
   labs(x="AUC incidencia de maculas", 
-       y = "Tratamiento")    
-  # scale_x_continuous(breaks=scales::pretty_breaks())
+       y = "Tratamiento") +   
+  scale_x_continuous(breaks=scales::pretty_breaks())+
+  theme_bw()+
+  coord_flip()
 ```
 
 # Enfermedades que inducen senescencia
@@ -193,7 +205,7 @@ La senescencia no cuenta para ninguna enfermedad, ya que es imposible distinguir
 cebada
 ```
 
-Hacemos un cebada long solo con fines graficos, entonces no creamos `cebada_long. 
+Hacemos un cebada long solo con fines graficos, entonces no creamos `cebada_long`. 
 
 ```{r}
 cebada %>% 
@@ -224,7 +236,8 @@ Ahora calculamos el AF sana (%), restando al AF activa, la severidad media de ma
 
 ```{r}
 cebada <- cebada %>% 
-  mutate(af_sana = verdor - e1_sev - e2_sev) 
+  mutate(af_sana = verdor - e1_sev - e2_sev) %>% 
+  mutate(sev_tot = e1_sev + e2_sev) 
 cebada
 ```
 
@@ -239,4 +252,15 @@ cebada %>%
                         type = "absolute")) -> cebada_auc
 ```
 
+```{r}
+cebada_auc <- cebada_auc %>% 
+  mutate_at(vars(trt, rep), as.factor)
+```
+
+```{r}
+cebada_auc %>% 
+  ggplot()+
+  aes(y=auc, x=trt, col=rep)+
+  geom_point()
+```
 ... continuamos con los pasos anteriores de `can_auc` 
