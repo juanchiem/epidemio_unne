@@ -1,0 +1,242 @@
+# Area bajo la curva de progreso 
+
+Reproducción de: https://apsjournals.apsnet.org/doi/10.1094/PHYTOFR-11-20-0033-A 
+
+```{r}
+# install.packages("pacman")
+pacman::p_load(tidyverse, epifitter)
+```
+
+# Área abajo la curva
+
+```{r}
+time = c(1,2,3,4)
+y = c(1,2,3,10)
+```
+
+# Area under the disease progress curve (AUDPC) - Absoluta
+
+
+```{r}
+audpc_1  <- AUDPC(time = time, y = y, y_proportion = FALSE, 
+                  type = "absolute")
+audpc_1
+```
+
+# Area under the disease progress stairs (AUDPS) - Absoluta
+
+```{r}
+audps_1  <- AUDPS(time = time, y = y, y_proportion = FALSE, 
+                  type = "absolute")
+audps_1
+```
+
+AUC standarizada
+
+```{r}
+sAUDPC <- audpc_1/(4-1)
+sAUDPC
+```
+
+```{r}
+sAUDPS <- audps_1 * (4-1) / ((4-1)*4)
+sAUDPS
+```
+
+AUDPC relativa
+```{r}
+audpc_max <- 10*(4-1)
+(rAUDPC <- audpc_1/audpc_max)
+```
+
+AUDPS relativa
+```{r}
+audps_max <- 10*(4)
+(rAUDPC <- audps_1/audps_max)
+```
+
+
+# Aplicación a un caso real
+
+```{r}
+load("data/data.RData")
+```
+
+Dataset `canola` 
+
+Experimento de canola conducido en Balcarce, donde fueron testeados 10 fungicidas (mas un control sin protección con fungicida) con 3 bloques en el cual se registró el progreso de la incidencia de manchas foliares de Phoma lingam a través del tiempo (tiempo térmico desde la detección de la primera mancha)
+
+```{r}
+canola
+```
+
+```{r}
+canola %>%  
+  pivot_longer(inc_15:inc_248, 
+         names_to = "tt", 
+         values_to = "inc", 
+         names_prefix = "inc_")-> can_long
+```
+
+```{r}
+can_long
+```
+
+```{r}
+can_long <- can_long %>% 
+  mutate_at(vars(tt), as.numeric)
+
+can_long
+```
+
+Calcularemos un valor de AUC por parcela con auxilio de las funciones `group_by` y `summarize` 
+
+```{r}
+can_long %>%
+  group_by(trt, bk) %>%
+  summarize(auc = AUDPC(time = tt, 
+                        y = inc, 
+                        y_proportion = FALSE, 
+                        type = "absolute")) -> can_auc
+```
+
+Chequeamos str del nuevo dataset, que entrara al modelado
+
+```{r}
+can_auc
+```
+
+```{r}
+can_auc <- can_auc %>% 
+  mutate_at(vars(trt, bk), as.factor)
+```
+
+# Model fitting 
+
+```{r}
+pacman::p_load(emmeans, multcomp, scales)
+```
+
+```{r}
+mod_canola <- lm(auc ~ trt + bk, data = can_auc)
+```
+
+```{r}
+par(mfrow = c(1, 2))
+plot(mod_canola, which = c(1,2))
+```
+
+```{r}
+MASS::boxcox(mod_canola)
+```
+
+```{r}
+mod_canola1 <- lm(log(auc) ~ trt + bk, data = can_auc)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+plot(mod_canola, which = c(1,2))
+plot(mod_canola1, which = c(1,2))
+```
+
+```{r}
+layout(1)
+MASS::boxcox(mod_canola1)
+```
+
+Estimamos las medias ajustadas por el modelo
+
+```{r}
+em <- emmeans(mod_canola1, ~trt, type = "response")
+```
+
+Hacemos las comparaciones multiples segun test de Tukey
+
+```{r}
+res <- multcomp::cld(em, Letters = letters, 
+                     alpha = .05, 
+                     reversed = F) 
+res
+```
+
+```{r}
+plot(res, alpha =0.5) + 
+  geom_vline(xintercept = res %>% 
+               filter(trt==1) %>% 
+               pull(response), 
+             linetype = 2, col ="gray50")+
+  coord_flip()+
+  geom_point(data = can_auc, 
+             aes(x = auc, 
+                 y = trt), pch=21, 
+             position=position_dodge(width=1), size = 2) +
+  geom_text(data = res, angle=90, vjust=-0.7,
+            aes(x = response,
+                y = trt,
+                label = .group),
+            size = 4)+
+  labs(x="AUC incidencia de maculas", 
+       y = "Tratamiento")    
+  # scale_x_continuous(breaks=scales::pretty_breaks())
+```
+
+# Enfermedades que inducen senescencia
+
+Ensayo de fungicidas en cebada (trt=15). 
+DBCA con 4 rep.
+Evaluaciones de sev media a los 0, 9, 20 y 29 dias desde aplicado. 
+Estimacion de AF activa (lo que no es senescencia)
+La senescencia no cuenta para ninguna enfermedad, ya que es imposible distinguir su causa.
+
+```{r}
+cebada
+```
+
+Hacemos un cebada long solo con fines graficos, entonces no creamos `cebada_long. 
+
+```{r}
+cebada %>% 
+  pivot_longer(
+    cols = c("verdor", "e1_sev", "e2_sev"), 
+    names_to = "var", 
+    values_to = "val") %>% 
+  mutate(var = factor(var),
+         var = fct_relevel(var, "verdor")) %>% 
+  ggplot()+
+  aes(x=dias, y=val, col = var)+
+  facet_wrap("trt")+
+  geom_point(alpha=0.3) +
+  stat_summary(fun=mean, geom="line", 
+               size=0.7, alpha=.5,  
+               aes(col=var, group=var)) +
+  scale_color_manual(
+    labels = c("AF",  "Sev mancha en red (%)", "Sev escaldadura (%)"),
+    values = c("green", "red", "blue")
+  ) +
+  theme_bw()+ 
+  labs(title = "Evolución área foliar",
+       y = "%", x = "Días desde aplicado", 
+       col = "")
+```
+
+Ahora calculamos el AF sana (%), restando al AF activa, la severidad media de mancha en red y escaldadura.
+
+```{r}
+cebada <- cebada %>% 
+  mutate(af_sana = verdor - e1_sev - e2_sev) 
+cebada
+```
+
+Finalmente calculamos el AUC del AF sana (LAI)
+
+```{r}
+cebada %>% 
+  group_by(trt, rep) %>%
+  summarize(auc = AUDPC(time = dias, 
+                        y = af_sana, 
+                        y_proportion = FALSE, 
+                        type = "absolute")) -> cebada_auc
+```
+
+... continuamos con los pasos anteriores de `can_auc` 
