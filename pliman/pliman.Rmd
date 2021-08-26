@@ -1,0 +1,132 @@
+---
+title: "Pliman"
+output: html_document
+---
+
+Reproduciremos el post de Open Plant Pathology escrito por Emerson del Ponte
+
+```{r}
+browseURL("https://openplantpathology.org/posts/2021-05-31-measuring-plant-disease-severity-using-the-pliman-r-package/")
+```
+
+# Setup 
+
+Noten que pliman requiere R version 4 y el paquete "EBImage" (este paso se hace una sola vez)
+
+```{r}
+install.packages("BiocManager")
+BiocManager::install("EBImage")
+```
+
+Ahora si instalemos/activemos los paquetes requeridos para esta sesión:
+
+```{r}
+pacman::p_load(tidyverse, pliman, epiR)
+```
+
+# Indicar background (b), sano (h) y sintomatico (s) 
+
+```{r}
+h <- image_import("sbr_h.png")
+s <- image_import("sbr_s.png")
+b <- image_import("sbr_b.png")
+```
+
+Pedimos que muestre cada imagen indicada anteriormente:
+
+```{r}
+image_combine(h, s, b, ncol = 3)
+
+```
+
+# Imagen individual 
+
+Importamos una solo imagen 
+
+```{r}
+img46 <- image_import("pliman/originals/img46.png")
+image_combine(img46)
+```
+
+Pedimos estimar %sintomático / %sano  
+
+```{r}
+symptomatic_area(img = img46,
+                 img_healthy = h,
+                 img_symptoms = s,
+                 img_background = b,
+                 show_image = TRUE)
+```
+
+Y ahora que se haga la magia con todas las imagenes contenidas en una carpeta! 
+
+# Múltiples imagenes 
+
+```{r}
+pliman <- symptomatic_area(img_pattern = "img",
+                           dir_original = "originals" ,
+                           dir_processed = "processed",
+                           save_image = TRUE,
+                           img_healthy = h,
+                           img_symptoms = s,
+                           img_background = b,
+                           show_image = FALSE)
+
+```
+
+WTF! 
+
+```{r}
+pliman
+```
+
+# Cuán buenas son las estimaciones hechas con pliman??
+
+Estas imagenes evaluadas con pliman fueron evaluadas anteriormente con el software Quant (de conocida precision)
+
+```{r}
+quant <- tribble(
+  ~sample, ~actual,
+  "img5",     75,
+  "img11",     24,
+  "img35",     52,
+  "img37",     38,
+  "img38",     17,
+  "img46",      7,
+  "img63",    2.5,
+  "img67",   0.25,
+  "img70",     67,
+  "img75",     10
+)
+```
+
+
+Fusionamos los data frames pliman y quant
+
+```{r}
+dat <- left_join(pliman, quant)
+dat
+```
+
+Visualizamos la confrontacion de las mediciones por ambos métodos, en eje x el "standard gold"y en y el que estamos poniendo a prueba:
+
+```{r}
+dat %>% 
+  ggplot(aes(actual, symptomatic))+
+  geom_point()+
+  ylim(0,100)+
+  xlim(0,100)+
+  geom_abline(slope = 1, intercept = 0)+
+  theme_bw()+
+  labs(x = "Quant", 
+       y = "pliman")
+```
+
+Calculamos el coeficiente de correlacion de concordancia entre variables continuas de Lin's (1989, 2000) del paquete "epiR" (llamado en el chunk de session setup)
+
+```{r}
+ccc <- epi.ccc(dat$actual, dat$symptomatic)
+ccc$rho.c
+```
+
+que tul??
