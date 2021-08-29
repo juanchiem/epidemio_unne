@@ -5,6 +5,15 @@ output:
     highlight: kate
 ---
 
+
+```{r}
+usethis::use_git_config(
+  scope = "project",
+  user.name = "juanchiem",
+  user.email = "edwardsmolina@gmail.com"
+)
+```
+
 ```{r echo=FALSE}
 knitr::opts_chunk$set(echo = F, warning = F, message = F)
 ```
