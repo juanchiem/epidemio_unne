@@ -2,7 +2,6 @@
 title: "Pliman"
 output: html_document
 ---
-
 Reproduciremos el post de Open Plant Pathology escrito por Emerson del Ponte
 
 ```{r}
@@ -14,8 +13,8 @@ browseURL("https://openplantpathology.org/posts/2021-05-31-measuring-plant-disea
 Noten que pliman requiere R version 4 y el paquete "EBImage" (este paso se hace una sola vez)
 
 ```{r}
-install.packages("BiocManager")
-BiocManager::install("EBImage")
+# install.packages("BiocManager")
+# BiocManager::install("EBImage")
 ```
 
 Ahora si instalemos/activemos los paquetes requeridos para esta sesión:
@@ -27,16 +26,15 @@ pacman::p_load(tidyverse, pliman, epiR)
 # Indicar background (b), sano (h) y sintomatico (s) 
 
 ```{r}
-h <- image_import("sbr_h.png")
-s <- image_import("sbr_s.png")
-b <- image_import("sbr_b.png")
+h <- image_import("pliman/sbr_h.png")
+s <- image_import("pliman/sbr_s.png")
+b <- image_import("pliman/sbr_b.png")
 ```
 
 Pedimos que muestre cada imagen indicada anteriormente:
 
 ```{r}
 image_combine(h, s, b, ncol = 3)
-
 ```
 
 # Imagen individual 
@@ -64,14 +62,13 @@ Y ahora que se haga la magia con todas las imagenes contenidas en una carpeta!
 
 ```{r}
 pliman <- symptomatic_area(img_pattern = "img",
-                           dir_original = "originals" ,
-                           dir_processed = "processed",
+                           dir_original = "pliman/originals" ,
+                           dir_processed = "pliman/processed",
                            save_image = TRUE,
                            img_healthy = h,
                            img_symptoms = s,
                            img_background = b,
                            show_image = FALSE)
-
 ```
 
 WTF! 
@@ -100,7 +97,6 @@ quant <- tribble(
 )
 ```
 
-
 Fusionamos los data frames pliman y quant
 
 ```{r}
@@ -126,6 +122,7 @@ Calculamos el coeficiente de correlacion de concordancia entre variables continu
 
 ```{r}
 ccc <- epi.ccc(dat$actual, dat$symptomatic)
+ccc
 ccc$rho.c
 ```
 

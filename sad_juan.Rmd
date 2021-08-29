@@ -1,6 +1,8 @@
 ---
 title: "Untitled"
 output: html_document
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -12,38 +14,39 @@ theme_set(theme_minimal())
 
 ```{r cars}
 sad_wide_raw <- read_csv(here::here("sad", "data", "data-sad.csv"))
+
 sad_wide_raw %>% 
   separate(method, c("author","method"),  "_") %>%   
   mutate_if(is.character, as.factor) %>% 
-  mutate_at(vars(author, method), fct_rev)-> sad_wide
+  mutate_at(vars(author, method), fct_rev) -> sad_wide
 sad_wide
 ```
 
 We need to reshape this data frame to the tidy format, where all responses are in a single column which facilitates further work within the `tidyverse`. For this, we use the `gather` function and create the `rater` and the `estimate` variables to accomodate data from the multiple columns. We should indicate the columns to gather, which are 4 to 23 and this way the first three columns are kept as we want: method, leaf and actual severity.
 
 ```{r}
-sad <- sad_wide %>%
+sad_wide %>%
   pivot_longer(cols= 5:24, 
                names_to = "rater", 
                values_to = "estimate") %>%
-  mutate_at(vars(rater), as.numeric)
+  mutate_at(vars(rater), as.numeric) -> sad
 
 sad
 ```
 
 ```{r}
 sad %>%
-  ggplot(aes(method, estimate - actual)) +
+  ggplot(aes(x= method, y = estimate - actual)) +
   facet_wrap("author")+
   geom_boxplot() +
   geom_jitter(width=.1, alpha=.2) 
 ```
 
-First the absolue value.
+First the absolute value
 
 ```{r}
 sad %>%
-  ggplot(aes(leaf, actual, color = method)) +
+  ggplot(aes(x=leaf, y=actual, color = method)) +
   facet_wrap("author")+
   geom_line(aes(leaf, actual, color = "actual"),size = 1.5) +
   geom_point(aes(leaf, estimate), size = 1.5, alpha = 0.2) +
@@ -55,7 +58,7 @@ Error of the estimates
 
 ```{r}
 sad %>%
-  ggplot(aes(leaf, estimate - actual, color = method)) +
+  ggplot(aes(x= leaf, y=estimate - actual, color = method)) +
   facet_wrap("author")+
   geom_hline(yintercept = 0) +
   geom_point(aes(leaf, estimate - actual), size = 1.5, alpha = 0.2) +
@@ -123,40 +126,51 @@ ccc_func <- function(.) {
 
 
 ```{r}
-metrics <- sad %>% 
-  nest(data = c(-method, -rater)) %>% 
-  mutate(fit = map(data, ccc_func))
+sad %>% 
+  nest(data = c(leaf, actual, estimate)) -> nested_sad
 ```
 
 ```{r}
-metric_results <- metrics %>% 
+nested_sad
+```
+
+```{r}
+nested_sad %>% 
+  mutate(fit = map(data, ccc_func)) -> metrics
+metrics
+```
+
+
+
+```{r}
+metrics %>% 
   unnest(fit) %>% 
   rowwise %>% 
   mutate(fit = toString(unlist(fit))) %>%
-  group_by(method, rater) %>% 
-  summarize(string = paste(fit, collapse = "_")) %>% view
+  group_by(author, method, rater) %>% 
+  summarize(string = paste(fit, collapse = "_")) %>% 
   separate(col = string, 
            into = c("LCC", "s_shift", "l_shift", "C_b"), 
            sep = "_") %>% 
-  separate(col = rho, 
+  separate(col = LCC, 
            into = c("LCC", "ccc.lower", "ccc.upper"), 
            sep = ",") %>% 
-  mutate_at(vars(method, rater), as.factor) %>% 
+  mutate_at(vars(author, method, rater), as.factor) %>% 
   mutate_if(is.character, as.double) %>% 
-  separate(method, c("author","method"),  "_") %>% 
-  ungroup#
+  ungroup -> metric_results#
 ```
 
 ```{r}
-metric_results
+metric_results %>% 
+  knitr::kable()
 ```
 
 ```{r}
 metric_results %>% 
   group_by(author, method) %>% 
   summarise_if(is.numeric, mean, na.rm = TRUE) %>% 
-  select(l_shift, s_shift, C_b, )
-  arrange(desc(method))
+  # select(l_shift, s_shift, C_b, ) %>% 
+  arrange(desc(LCC))
 ```
 
 ```{r}
@@ -169,14 +183,14 @@ metric_new <- metric_results %>%
 ```
 
 ```{r}
-pc_old <- lmer(rho ~ method + (1 | rater), data = metric_old, REML = FALSE)
+pc_old <- lmer(LCC ~ method + (1 | rater), data = metric_old, REML = FALSE)
 means_pc_old <- emmeans(pc_old, ~ method)
 res_pc_old <- cld(means_pc_old, Letters=letters)
 res_pc_old
 ```
 
 ```{r}
-pc_new <- lmer(rho ~ method + (1 | rater), data = metric_new, REML = FALSE)
+pc_new <- lmer(LCC ~ method + (1 | rater), data = metric_new, REML = FALSE)
 means_pc_new <- emmeans(pc_new, ~ method)
 res_pc_new <- cld(means_pc_new, Letters=letters)
 res_pc_new
@@ -215,10 +229,3 @@ sad_occc_noaid_old$occc
 sad_icc_noaid_old$value
 ```
 
-
-```{r}
-```
-
-
-```{r}
-```
