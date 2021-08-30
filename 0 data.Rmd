@@ -7,6 +7,9 @@ output:
 
 
 ```{r}
+# git config --global --unset user.name
+# git config --global --unset user.email
+
 usethis::use_git_config(
   scope = "project",
   user.name = "juanchiem",
