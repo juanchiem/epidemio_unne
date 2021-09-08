@@ -1,0 +1,249 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+```{r}
+library(tidyverse)
+library(epifitter)
+```
+
+```{r}
+browseURL("https://alvesks.github.io/epifitter/articles/fitting.html")
+browseURL("https://emdelponte.github.io/epidemiology-R/temporal-analysis.html#model-fitting")
+```
+
+```{r}
+dpcL <- sim_logistic(
+  N = 100, # duration of the epidemics in days
+  y0 = 0.01, # disease intensity at time zero
+  dt = 10, # interval between assessments
+  r = 0.1, # apparent infection rate
+  alpha = 0.2, # level of noise
+  n = 7 # number of replicates
+)
+```
+
+```{r}
+dpcL
+```
+
+```{r}
+dpcL %>% 
+  ggplot()+
+  aes(time, y, group = replicates) +
+  geom_point(aes(time, random_y), shape = 1) + # plot the replicate values
+  geom_point(color = "steelblue", size = 2) +
+  geom_line(color = "steelblue") +
+  labs(
+    title = "Simulated 'complete' epidemics of sigmoid shape",
+    subtitle = "Produced using sim_logistic()"
+  )+
+  theme_minimal()
+```
+
+```{r}
+f_lin <- fit_lin(time = dpcL$time,  y = dpcL$random_y)
+```
+
+```{r}
+f_lin
+```
+
+```{r}
+head(f_lin$data)
+```
+
+Plot of predictions
+
+The plot_fit() produces, by default, a panel of plots depicting the observed and predicted values by all fitted models. The arguments pont_size and line_size that control for the size of the dots for the observation and the size of the fitted line, respectively.
+
+```{r}
+plot_lin <- plot_fit(f_lin,
+  point_size = 2,
+  line_size = 1
+) 
+
+# Default plots
+plot_lin 
+```
+
+Two-parameters
+
+The fit_nlin() function uses the Levenberg-Marquardt algorithm for least-squares estimation of nonlinear parameters. In addition to time and disease intensity, starting values for y0 and r should be given in the starting_par argument. The output format and interpretation is analogous to the fit_lin().
+
+NOTE: If you encounter error messages saying “matrix at initial parameter estimates”, try to modify the starting values for the parameters to solve the problem.
+
+```{r}
+f_nlin <- fit_nlin(
+  time = dpcL$time,
+  y = dpcL$random_y,
+  starting_par = list(y0 = 0.01, r = 0.03)
+)
+
+```
+
+```{r}
+f_nlin
+```
+
+```{r}
+plot_fit(f_nlin) +
+  theme_minimal()#changing plot theme
+```
+
+# Estimating K (maximum disease)
+
+In many epidemics the last measure (final time) of a DPC does not reach the maximum intensity and, for this reason, estimation of maximum asymptote (carrying capacity K) may be necessary. The fin_lin2() provides an estimation of K in addition to the estimates provided by fit_lin().
+
+Before demonstrating the function, we can transform our simulated data by creating another variable with y_random2 with maximum about 0.8 (80%). Simplest way is to multiply the y_random by 0.8.
+
+```{r}
+dpcL %>% 
+  mutate(random_y = random_y * 0.8) -> dpcL2
+dpcL2
+```
+
+Then we run the fit_nlin2() for the new dataset.
+
+```{r}
+f_nlin2 <- fit_nlin2(
+  time = dpcL2$time,
+  y = dpcL2$random_y,
+  starting_par = list(y0 = 0.01, r = 0.2, K =  0.6)
+)
+f_nlin2
+
+```
+
+```{r}
+plot_fit(f_nlin2)
+```
+
+# Fit models to multiple DPCs
+
+Most commonly, there are more than one epidemics to analyse either from observational or experimental studies. When the goal is to fit a common model to all curves, the fit_multi() function is in hand. Each DPC needs an unique identified to further combined in a single data frame.
+
+Data
+Let’s use the sim_ family of functions to create three epidemics and store the data in a single data.frame. The Gompertz model was used to simulate these data. Note that we allowed to the y0 and r parameter to differ the DPCs. We should combine the three DPCs using the bind_rows() function and name the identifier (.id), automatically created as a character vector, for each epidemics as ‘DPC’.
+
+```{r}
+epi1 <- sim_gompertz(N = 60, y0 = 0.001, dt = 5, r = 0.1, alpha = 0.4, n = 4)
+epi2 <- sim_gompertz(N = 60, y0 = 0.001, dt = 5, r = 0.12, alpha = 0.4, n = 4)
+epi3 <- sim_gompertz(N = 60, y0 = 0.003, dt = 5, r = 0.14, alpha = 0.4, n = 4)
+
+multi_epidemic <- bind_rows(epi1,
+  epi2,
+  epi3,
+  .id = "DPC"
+)
+head(multi_epidemic)
+```
+
+We can visualize the three DPCs in a same plot
+
+```{r}
+multi_epidemic %>% 
+  ggplot()+
+  aes(time, y, col = DPC)+
+  geom_point(size =2)+
+  geom_line()+
+  theme_minimal() +
+  labs(x = "Time", y = "Proportion disease") -> p_multi
+```
+
+```{r}
+p_multi
+```
+
+```{r}
+p_multi +
+  facet_wrap(~ DPC, ncol = 1)
+```
+
+Using fit_multi() 
+
+fit_multi() requires at least four arguments: time, disease intensity (as proportion), data and the curve identifier (strata_cols). The latter argument accepts one or more strata include as c("strata1",strata2"). In the example below, the stratum name is DPC, the name of the variable.
+
+By default, the linear regression is fitted to data but adding another argument nlin = T, the non linear regressions is fitted instead.
+
+```{r}
+multi_fit <- fit_multi(
+  time_col = "time",
+  intensity_col = "random_y",
+  data = multi_epidemic,
+  strata_cols = "DPC"
+)
+```
+
+```{r}
+head(multi_fit$Parameters, n=Inf)
+
+
+```
+
+```{r}
+multi_fit2 <- fit_multi(
+  time_col = "time",
+  intensity_col = "random_y",
+  data = multi_epidemic,
+  strata_cols = "DPC",
+  nlin = TRUE)
+```
+
+```{r}
+head(multi_fit2$Parameters)
+```
+
+```{r}
+multi_fit_K <- fit_multi(
+  time_col = "time",
+  intensity_col = "random_y",
+  data = multi_epidemic,
+  strata_cols = "DPC",
+  nlin = T,
+  estimate_K = T
+)
+head(multi_fit_K$Parameters)
+
+```
+
+```{r}
+multi_fit$Data %>%
+  ggplot(aes(time, predicted, color = DPC)) +
+  geom_point(aes(time, y), color = "gray") +
+  geom_line(size = 1) +
+  facet_grid(DPC ~ model, scales = "free_y") +
+  theme_minimal()+
+  coord_cartesian(ylim = c(0, 1))
+```
+
+```{r}
+multi_fit$Data %>%
+  filter(model == "Gompertz") %>%
+  ggplot(aes(time, y=predicted, color = DPC)) +
+  geom_point(aes(time, y), size = 2, alpha=.3) +
+  geom_line(size = 1.2) +
+  theme_minimal() +
+  labs(x = "Time", y = "Disease Intensity")
+```
+
+Apparent infection rate
+The multi_fit$Parameters element is where all stats and parameters as stored. Let’s plot the estimates of the apparent infection rate.
+
+```{r}
+multi_fit$Parameters %>%
+  filter(model == "Gompertz") %>%
+  ggplot(aes(DPC, r)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = r_ci_lwr, ymax = r_ci_upr),
+    width = 0,
+    size = 1
+  ) +
+  labs(
+    x = "Time",
+    y = "Apparent infection rate"
+  ) +
+  theme_minimal()
+```
+

@@ -1,0 +1,111 @@
+```{r}
+library(ggplot2)
+theme_set(theme_minimal())
+```
+
+# Definición matemática de los modelos logistico, gompertz e monomolecular (2 parametros)
+```{r}
+lo2 <- function(x, y0, r) { 1 / (1 + ((1 - y0) / y0) * exp(-r * x)) }
+go2 <- function(x, y0, r) { exp(log(y0) * exp(-r * x))}
+mo2 <- function(x, y0, r) {1 - ((1 - y0) * exp(-r * x))}
+
+```
+
+# Graficar los 3 modelos con los mismos coeficientes
+```{r}
+param1 = list(y0=0.01, r=0.3)
+```
+
+```{r}
+ggplot(data = data.frame(x = 0), aes(x = x))+
+  stat_function(fun=lo2, args=param1, aes(colour="Logístico")) +
+  stat_function(fun=go2, args=param1, aes(colour="Gompertz")) +
+  stat_function(fun=mo2, args=param1, aes(colour="Monomolecular")) +
+  xlim(0,25) + ylim(0,1) +
+  scale_colour_manual("Modelo", values = c("red", "green", "blue"))
+
+```
+
+# La predicción para $t=15$ para los 3 modelos seria:
+
+```{r}
+lo2(15, 0.01, 0.3)
+go2(15, 0.01, 0.3)
+mo2(15, 0.01, 0.3)
+
+```
+
+```{r}
+ggplot(data = data.frame(x = 0), aes(x = x))+
+  stat_function(fun=lo2, args=param1, aes(colour="Logístico")) +
+  stat_function(fun=go2, args=param1, aes(colour="Gompertz")) +
+  stat_function(fun=mo2, args=param1, aes(colour="Monomolecular")) +
+  scale_colour_manual("Modelo", values = c("red", "green", "blue")) + 
+  xlim(0,25) + ylim(0,1) +
+  geom_point(aes(x=15, y=lo2(15, 0.01, 0.3)))+
+  geom_point(aes(x=15, y=go2(15, 0.01, 0.3)))+
+  geom_point(aes(x=15, y=mo2(15, 0.01, 0.3)))
+```
+
+# Definición matemática de los modelos logistico, gompertz e monomolecular (3 parametros)
+
+```{r}
+lo3 <- function(x, K, y0, r) {K/(1+((K-y0)/y0)*exp(-r*x))}
+go3 <- function(x, K, y0, r) {K*(exp(-exp(y0-r*x)))}
+mo3 <- function(x, K, y0, r) {K-(K-y0)*exp(-r*x)}
+```
+
+# Graficar los 3 modelos con los mismos coeficientes
+
+```{r}
+param2 = list(K=0.8, y0=0.01, r=0.3)
+```
+
+```{r}
+ggplot(data = data.frame(x = 0), aes(x = x))+
+  stat_function(fun=lo3, args=param2, aes(colour="Logístico")) +
+  stat_function(fun=go3, args=param2, aes(colour="Gompertz")) +
+  stat_function(fun=mo3, args=param2, aes(colour="Monomolecular")) +
+  xlim(0,25) + ylim(0,1) +
+  scale_colour_manual("Modelo", values = c("red", "green", "blue"))
+
+```
+
+# La predicción para $t=15$ para los 3 modelos seria:
+
+```{r}
+lo3(15, 0.8, 0.01, 0.3)
+go3(15, 0.8, 0.01, 0.3)
+mo3(15, 0.8, 0.01, 0.3)
+```
+
+# Graficar dos curvas logisticas con igual $r$ (0.5) pero diferente $k$ (0.6 y 0.8):
+
+```{r}
+param3 = list(K=0.6, y0=0.01, r=0.5)
+param4 = list(K=0.8, y0=0.01, r=0.5)
+```
+
+
+```{r}
+ggplot(data = data.frame(t = 0), aes(x = t))+
+  stat_function(fun = lo3, args=param3, aes(colour = "r=0.5;k=0.6")) +
+  stat_function(fun = lo3, args=param4, aes(colour = "r=0.5;k=0.8")) +
+  xlim(0,25) + ylim(0,1) +
+  scale_colour_manual("Modelo \nLogístico", values = c("red", "blue"))
+```
+
+# Ahora, lo contrario, dos curvas logisticas con diferente $r$ (0.3 y 0.6) e igual $k$ (0.8):
+
+```{r}
+param5 = list(K=0.8, y0=0.01, r=0.4)
+param6 = list(K=0.8, y0=0.01, r=0.6)
+```
+
+```{r}
+ggplot(data = data.frame(t = 0), aes(x = t))+
+  stat_function(fun = lo3, args=param5, aes(colour = "r=0.4;k=0.8")) +
+  stat_function(fun = lo3, args=param6, aes(colour = "r=0.6;k=0.8")) +
+  xlim(0,25) + ylim(0,1) +
+  scale_colour_manual("Modelo \nLogístico", values = c("red","blue"))
+```
