@@ -9,3 +9,5 @@ pliman
 sad
 lins-concordance
 interrater-reliability
+mapa-de-prevalencia
+wide-sev-y-yield-a-long
