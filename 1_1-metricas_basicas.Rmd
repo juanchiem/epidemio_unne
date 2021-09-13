@@ -190,7 +190,7 @@ oli_sev %>%
 
 - Bonus 1
 
-## Wide (sev y yield) a long  
+## Wide (sev y yield) a long {-}
 
 Soja es el típico dataset de un experimento de campo donde evaluamos severidad y rendimiento de las parcelas
 
@@ -238,7 +238,7 @@ Ahora este dataset nos permitirá entrar al modelado unviaridado de severidad o 
 
 - Bonus 2
 
-## Mapa de prevalencia
+## Mapa de prevalencia {-}
 
 ```{r}
 library(tidyverse)
