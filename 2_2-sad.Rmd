@@ -1,18 +1,16 @@
----
-title: "Untitled"
-output: html_document
-editor_options: 
-  chunk_output_type: inline
----
-
-```{r setup, include=FALSE}
-pacman::p_load(tidyverse)
-theme_set(theme_minimal())
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      eval=FALSE, 
+                      fig.width = 12, 
+                      fig.height = 8)
+options(width = 90)
 ```
 
-## Dataset
+# SAD
 
-```{r cars}
+```{r}
 sad_wide_raw <- read_csv(here::here("sad", "data", "data-sad.csv"))
 
 sad_wide_raw %>% 
@@ -200,7 +198,7 @@ res_pc_new
 
 Two methods were used here. The overall concordance coefficient and the intra-class correlation coefficient.
 
-### No aid old
+* No aid old
 
 ```{r}
 library(irr)

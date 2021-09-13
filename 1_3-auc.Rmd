@@ -1,4 +1,16 @@
-# Area bajo la curva de progreso 
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      eval=FALSE, 
+                      fig.width = 12, 
+                      fig.height = 8)
+options(width = 90)
+```
+
+# AUC
+
+Area bajo la curva de progreso de la enfermedad
 
 Reproducción de: https://apsjournals.apsnet.org/doi/10.1094/PHYTOFR-11-20-0033-A 
 
@@ -7,14 +19,12 @@ Reproducción de: https://apsjournals.apsnet.org/doi/10.1094/PHYTOFR-11-20-0033-
 pacman::p_load(tidyverse, epifitter)
 ```
 
-# Área abajo la curva
-
 ```{r}
 time = c(1,2,3,4)
 y = c(1,2,3,10)
 ```
 
-# Area under the disease progress curve (AUDPC) - Absoluta
+Area under the disease progress curve (AUDPC) - Absoluta
 
 ```{r}
 audpc_1  <- AUDPC(time = time, y = y, 
@@ -23,7 +33,7 @@ audpc_1  <- AUDPC(time = time, y = y,
 audpc_1
 ```
 
-# Area under the disease progress stairs (AUDPS) - Absoluta
+Area under the disease progress stairs (AUDPS) - Absoluta
 
 ```{r}
 audps_1  <- AUDPS(time = time, y = y, y_proportion = FALSE, 
@@ -57,7 +67,7 @@ audps_max <- 10*(4)
 ```
 
 
-# Aplicación a un caso real
+Aplicación a un caso real
 
 ```{r}
 load("data/data.RData")
@@ -85,11 +95,21 @@ canola %>%
 can_long
 ```
 
+
 ```{r}
 can_long <- can_long %>% 
   mutate_at(vars(tt), as.numeric)
 
 can_long
+```
+
+```{r}
+can_long %>%   
+  unite("par", trt, bk, remove = FALSE) %>% 
+  ggplot()+ 
+  aes(x=tt, y=inc)+ 
+  geom_line()+
+  facet_wrap("par")
 ```
 
 Calcularemos un valor de AUC por parcela con auxilio de las funciones `group_by` y `summarize` 
@@ -121,7 +141,7 @@ can_auc %>%
   geom_point()
 ```
 
-# Model fitting 
+Model fitting 
 
 ```{r}
 pacman::p_load(emmeans, multcomp, scales)
@@ -193,74 +213,3 @@ plot(res, alpha =0.5) +
   coord_flip()
 ```
 
-# Enfermedades que inducen senescencia
-
-Ensayo de fungicidas en cebada (trt=15). 
-DBCA con 4 rep.
-Evaluaciones de sev media a los 0, 9, 20 y 29 dias desde aplicado. 
-Estimacion de AF activa (lo que no es senescencia)
-La senescencia no cuenta para ninguna enfermedad, ya que es imposible distinguir su causa.
-
-```{r}
-cebada
-```
-
-Hacemos un cebada long solo con fines graficos, entonces no creamos `cebada_long`. 
-
-```{r}
-cebada %>% 
-  pivot_longer(
-    cols = c("verdor", "e1_sev", "e2_sev"), 
-    names_to = "var", 
-    values_to = "val") %>% 
-  mutate(var = factor(var),
-         var = fct_relevel(var, "verdor")) %>% 
-  ggplot()+
-  aes(x=dias, y=val, col = var)+
-  facet_wrap("trt")+
-  geom_point(alpha=0.3) +
-  stat_summary(fun=mean, geom="line", 
-               size=0.7, alpha=.5,  
-               aes(col=var, group=var)) +
-  scale_color_manual(
-    labels = c("AF",  "Sev mancha en red (%)", "Sev escaldadura (%)"),
-    values = c("green", "red", "blue")
-  ) +
-  theme_bw()+ 
-  labs(title = "Evolución área foliar",
-       y = "%", x = "Días desde aplicado", 
-       col = "")
-```
-
-Ahora calculamos el AF sana (%), restando al AF activa, la severidad media de mancha en red y escaldadura.
-
-```{r}
-cebada <- cebada %>% 
-  mutate(af_sana = verdor - e1_sev - e2_sev) %>% 
-  mutate(sev_tot = e1_sev + e2_sev) 
-cebada
-```
-
-Finalmente calculamos el AUC del AF sana (LAI)
-
-```{r}
-cebada %>% 
-  group_by(trt, rep) %>%
-  summarize(auc = AUDPC(time = dias, 
-                        y = af_sana, 
-                        y_proportion = FALSE, 
-                        type = "absolute")) -> cebada_auc
-```
-
-```{r}
-cebada_auc <- cebada_auc %>% 
-  mutate_at(vars(trt, rep), as.factor)
-```
-
-```{r}
-cebada_auc %>% 
-  ggplot()+
-  aes(y=auc, x=trt, col=rep)+
-  geom_point()
-```
-... continuamos con los pasos anteriores de `can_auc` 

@@ -1,0 +1,44 @@
+---
+title: "Fitopatometría en R"
+author: "[Juan Edwards](https://github.com/juanchiem)"
+site: bookdown::bookdown_site
+link-citations: true
+---
+
+```{r include=FALSE}
+library(knitr)
+opts_chunk$set(echo = TRUE, 
+               warning = FALSE, 
+               message = FALSE, 
+               eval=FALSE, 
+               fig.width = 8,
+               fig.height = 6)
+
+options(width = 90)
+```
+
+* Objetivos
+
+Familiarizar al alumno con las herramientas (paquetes) del software R para diferentes análisis de epidemias de enfermedades de cultivos agrícolas. 
+
+* Destinatarios 
+
+Ingenieros agrónomos, Licenciados en Biotecnología o Licenciados en Biología que demuestren conocimientos previos sobre uso y manejo de R y sobre conceptos básicos de Fitopatología.  
+
+* Motivación
+
+>“Our ability to understand a phenomenon is proportional to our ability to measure it”
+> `r tufte::quote_footer('--- Lord Kelvin (1824-1907)')`
+
+>“How can plant pathologists apply advanced statistical procedures or develop quantitative models based upon disease assessment data of unknown accuracy and precision?”
+> `r tufte::quote_footer('--- David Mackenzie, 1979')`
+
+>“Without quantification of disease, no studies in epidemiology, no 
+assessment of crop losses, and no plant disease surveys and 
+their applications would be possible”
+> `r tufte::quote_footer('--- Kranz, 1988')`
+
+> “The cornerstone of epidemic analysis”
+> `r tufte::quote_footer('--- Campbell and Neher, 1994')`
+
+![](fig/cornerstone.png)

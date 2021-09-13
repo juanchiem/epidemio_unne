@@ -1,0 +1,15 @@
+book_filename: "Fitopatometría"
+output_dir: "docs"
+new_session: false
+delete_merged_file: true
+
+rmd_files: [
+  "index.Rmd",
+  "0-data.Rmd",
+  "1_1-metricas_basicas.Rmd",
+  "1_2-dsi.Rmd",
+  "1_3-auc.Rmd",
+  "1_4-inductoras_de_senescencia.Rmd",
+  "2_1-pliman.Rmd",
+  "2_2-sad.Rmd"  
+  ]

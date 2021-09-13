@@ -1,0 +1,81 @@
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      eval=FALSE, 
+                      fig.width = 12, 
+                      fig.height = 8)
+options(width = 90)
+```
+
+# Enfermedades que inducen senescencia
+
+Ensayo de fungicidas en cebada (trt=15). 
+DBCA con 4 rep.
+Evaluaciones de sev media a los 0, 9, 20 y 29 dias desde aplicado. 
+Estimacion de AF activa (lo que no es senescencia)
+La senescencia no cuenta para ninguna enfermedad, ya que es imposible distinguir su causa.
+
+```{r}
+cebada
+```
+
+Hacemos un cebada long solo con fines graficos, entonces no creamos `cebada_long`. 
+
+```{r}
+cebada %>% 
+  pivot_longer(
+    cols = c("verdor", "e1_sev", "e2_sev"), 
+    names_to = "var", 
+    values_to = "val") %>% 
+  mutate(var = factor(var),
+         var = fct_relevel(var, "verdor")) %>% 
+  ggplot()+
+  aes(x=dias, y=val, col = var)+
+  facet_wrap("trt")+
+  geom_point(alpha=0.3) +
+  stat_summary(fun=mean, geom="line", 
+               size=0.7, alpha=.5,  
+               aes(col=var, group=var)) +
+  scale_color_manual(
+    labels = c("AF",  "Sev mancha en red (%)", "Sev escaldadura (%)"),
+    values = c("green", "red", "blue")
+  ) +
+  theme_bw()+ 
+  labs(title = "Evolución área foliar",
+       y = "%", x = "Días desde aplicado", 
+       col = "")
+```
+
+Ahora calculamos el AF sana (%), restando al AF activa, la severidad media de mancha en red y escaldadura.
+
+```{r}
+cebada <- cebada %>% 
+  mutate(af_sana = verdor - e1_sev - e2_sev) %>% 
+  mutate(sev_tot = e1_sev + e2_sev) 
+cebada
+```
+
+Finalmente calculamos el AUC del AF sana (LAI)
+
+```{r}
+cebada %>% 
+  group_by(trt, rep) %>%
+  summarize(auc = AUDPC(time = dias, 
+                        y = af_sana, 
+                        y_proportion = FALSE, 
+                        type = "absolute")) -> cebada_auc
+```
+
+```{r}
+cebada_auc <- cebada_auc %>% 
+  mutate_at(vars(trt, rep), as.factor)
+```
+
+```{r}
+cebada_auc %>% 
+  ggplot()+
+  aes(y=auc, x=trt, col=rep)+
+  geom_point()
+```
+... continuamos con los pasos anteriores de `can_auc` 

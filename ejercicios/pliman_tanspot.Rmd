@@ -1,20 +1,14 @@
-```{r include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, 
-                      warning = FALSE, 
-                      message = FALSE, 
-                      eval=FALSE, 
-                      fig.width = 12, 
-                      fig.height = 8)
-options(width = 90)
-```
-
-# Pliman 
-
+---
+title: "Pliman"
+output: html_document
+---
 Reproduciremos el post de Open Plant Pathology escrito por Emerson del Ponte
 
 ```{r}
 browseURL("https://openplantpathology.org/posts/2021-05-31-measuring-plant-disease-severity-using-the-pliman-r-package/")
 ```
+
+# Setup 
 
 Noten que pliman requiere R version 4 y el paquete "EBImage" (este paso se hace una sola vez)
 
@@ -29,12 +23,13 @@ Ahora si instalemos/activemos los paquetes requeridos para esta sesión:
 pacman::p_load(tidyverse, pliman, epiR)
 ```
 
-* Indicar background (b), sano (h) y sintomatico (s) 
+# Indicar background (b), sano (h) y sintomatico (s) 
 
 ```{r}
-h <- image_import("pliman/sbr_h.png")
-s <- image_import("pliman/sbr_s.png")
-b <- image_import("pliman/sbr_b.png")
+h <- image_import("tan_spot/pixels/healthy.jpg")
+s <- image_import("tan_spot/pixels/diseased.jpg")
+b <- image_import("tan_spot/pixels/back.jpg")
+
 ```
 
 Pedimos que muestre cada imagen indicada anteriormente:
@@ -43,19 +38,19 @@ Pedimos que muestre cada imagen indicada anteriormente:
 image_combine(h, s, b, ncol = 3)
 ```
 
-* Imagen individual 
+# Imagen individual 
 
 Importamos una solo imagen 
 
 ```{r}
-img46 <- image_import("pliman/originals/img46.png")
-image_combine(img46)
+img0 <- image_import("tan_spot/0.jpg")
+image_combine(img0)
 ```
 
 Pedimos estimar %sintomático / %sano  
 
 ```{r}
-symptomatic_area(img = img46,
+symptomatic_area(img = img0,
                  img_healthy = h,
                  img_symptoms = s,
                  img_background = b,
@@ -64,12 +59,12 @@ symptomatic_area(img = img46,
 
 Y ahora que se haga la magia con todas las imagenes contenidas en una carpeta! 
 
-* Múltiples imagenes 
+# Múltiples imagenes 
 
 ```{r}
 pliman <- symptomatic_area(img_pattern = "img",
-                           dir_original = "pliman/originals" ,
-                           dir_processed = "pliman/processed",
+                           dir_original = "tan_spot" ,
+                           dir_processed = "tan_spot/processed",
                            save_image = TRUE,
                            img_healthy = h,
                            img_symptoms = s,
@@ -83,7 +78,7 @@ WTF!
 pliman
 ```
 
-* Cuán buenas son las estimaciones hechas con pliman??
+# Cuán buenas son las estimaciones hechas con pliman??
 
 Estas imagenes evaluadas con pliman fueron evaluadas anteriormente con el software Quant (de conocida precision)
 

@@ -1,0 +1,11 @@
+métricas-báscias
+incidencia
+prevalencia
+severidad
+dsi
+auc
+enfermedades-que-inducen-senescencia
+pliman
+sad
+lins-concordance
+interrater-reliability

@@ -1,0 +1,227 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Ej 1
+
+```{r}
+oli_inc %>% 
+  ggplot()+
+  aes(x=factor(year), y=inc, col =factor(farm)) +
+  geom_point() +
+  geom_line(aes(group=farm)) +
+  geom_line(stat = "summary", linetype= "dashed", fun=mean, aes(group=loc))+
+  facet_grid(. ~ loc)
+```
+
+Ej 2 
+
+```{r}
+oli_prev %>% 
+  group_by(year) %>% 
+  top_n(-1) %>% 
+  arrange(year)
+```
+
+Ej 3
+
+```{r}
+oli_sev %>%
+  unite("id", loc, farm, remove = FALSE) %>% 
+  group_by(year) %>% 
+  top_n(3, sev_media) %>% 
+  arrange(year)
+```
+
+```{r}
+oli_sev %>%
+  unite("id", loc, farm, remove = FALSE) %>% 
+  group_by(year) %>% 
+  top_n(3, sev_cond) %>% 
+  arrange(year)
+```
+
+EJ 4
+
+```{r}
+pacman::p_load(emmeans, multcomp, scales)
+```
+
+
+```{r}
+mod1 = lm(sev~ fungic + bk, data=soja_long)
+MASS::boxcox(mod1)
+em <- emmeans(mod1, ~fungic, type = "response")
+```
+
+Hacemos las comparaciones multiples segun test de Tukey
+
+```{r}
+res <- multcomp::cld(em, 
+                     Letters = letters, 
+                     alpha = .1, 
+                     reversed = F) 
+res
+```
+
+```{r}
+plot(res, alpha =0.5) + 
+  geom_vline(xintercept = res %>% filter(fungic=="ZZ_CHECK") %>% pull(emmean), 
+             linetype = 2, col ="gray50")+
+  geom_point(data = soja_long, 
+             aes(x = sev, 
+                 y = fungic), pch=21, 
+             position=position_dodge(width=1), size = 2) +
+  geom_text(data = res, angle=90, vjust=-0.7,
+            aes(x = emmean,
+                y = fungic,
+                label = .group),
+            size = 4)+
+  labs(x="AUC incidencia de maculas", 
+       y = "Tratamiento") +   
+  scale_x_continuous(breaks=scales::pretty_breaks())+
+  theme_bw()+
+  coord_flip()
+```
+
+Ej 5 
+
+```{r}
+canola %>%  
+  pivot_longer(
+    cols= inc_15:inc_248, 
+    names_to = "tt", 
+    values_to = "inc", 
+    names_prefix = "inc_")-> can_long
+```
+
+```{r}
+can_long
+```
+
+
+```{r}
+can_long <- can_long %>% 
+  mutate_at(vars(tt), as.numeric) %>% 
+  unite("par", trt, bk, remove = FALSE)
+
+can_long
+```
+
+```{r}
+can_long %>% 
+  ggplot()+ 
+  aes(x=tt, y=inc)+ 
+  geom_line()+
+  geom_point()+
+  facet_wrap("par") 
+```
+
+
+```{r}
+can_long %>% 
+    mutate(inc = case_when( 
+    par == "10_3" & tt == "165" ~ NA_real_, 
+    par == "2_2" & tt == "146" ~ NA_real_, 
+    TRUE ~ inc)) %>% 
+  group_by(par) %>% 
+  mutate(inc = zoo::na.approx(inc, na.rm=FALSE))  -> can2
+```
+
+
+```{r}
+can2 %>%   
+  ggplot()+ 
+  aes(x=tt, y=inc)+ 
+  geom_line()+
+  geom_point()+
+  facet_wrap("par")
+```
+
+```{r}
+can2 %>%
+  group_by(trt, bk) %>%
+  summarize(auc = AUDPC(time = tt, 
+                        y = inc, 
+                        y_proportion = FALSE, 
+                        type = "absolute")) -> can_auc
+```
+
+```{r}
+can_auc <- can_auc %>% 
+  mutate_at(vars(trt, bk), as.factor)
+```
+
+```{r}
+can_auc %>% 
+  ggplot()+
+  aes(y=auc,x=trt)+
+  geom_boxplot()+
+  geom_point() 
+```
+
+Ej 6 
+
+```{r}
+pacman::p_load(tidyverse, pliman, epiR)
+```
+
+# Indicar background (b), sano (h) y sintomatico (s) 
+
+```{r}
+h <- image_import("tan_spot/pixels/healthy.jpg")
+s <- image_import("tan_spot/pixels/diseased.jpg")
+b <- image_import("tan_spot/pixels/back.jpg")
+
+```
+
+Pedimos que muestre cada imagen indicada anteriormente:
+
+```{r}
+image_combine(h, s, b, ncol = 3)
+```
+
+# Imagen individual 
+
+Importamos una solo imagen 
+
+```{r}
+img0 <- image_import("tan_spot/0.jpg")
+image_combine(img0)
+```
+
+Pedimos estimar %sintomático / %sano  
+
+```{r}
+symptomatic_area(img = img0,
+                 img_healthy = h,
+                 img_symptoms = s,
+                 img_background = b,
+                 show_image = TRUE)
+```
+
+Y ahora que se haga la magia con todas las imagenes contenidas en una carpeta! 
+
+# Múltiples imagenes 
+
+```{r}
+pliman <- symptomatic_area(img_pattern = "img",
+                           dir_original = "tan_spot" ,
+                           dir_processed = "tan_spot/processed",
+                           save_image = TRUE,
+                           img_healthy = h,
+                           img_symptoms = s,
+                           img_background = b,
+                           show_image = FALSE)
+```
+
+WTF! 
+
+```{r}
+pliman
+```

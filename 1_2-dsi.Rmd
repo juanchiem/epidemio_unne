@@ -1,6 +1,3 @@
----
-title: "Indice de severidad"
----
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
@@ -21,7 +18,7 @@ load("data/data.RData")
 
 Disease severity index (Indice de severidad)
 
-## Poroto/sclerotinia 
+* Poroto/sclerotinia 
 
 ```{r}
 poroto
@@ -45,7 +42,7 @@ Print
 poroto_dsi
 ```
 
-# Model fitting 
+Model fitting 
 
 ```{r}
 mod0 <- lm(dsi_midpoint ~ trt, data = poroto_dsi)

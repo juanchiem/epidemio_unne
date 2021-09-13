@@ -1,0 +1,101 @@
+---
+title: "Fitopatometría en R"
+author: "[Juan Edwards](https://github.com/juanchiem)"
+link-citations: true
+site: bookdown::bookdown_site
+---
+
+```{r include=FALSE}
+library(knitr)
+opts_chunk$set(echo = TRUE, 
+               warning = FALSE, 
+               message = FALSE, 
+               eval=FALSE, 
+               fig.width = 8,
+               fig.height = 6)
+
+options(width = 90)
+```
+
+# Introducción {-}
+
+## Objetivos  {-}
+
+- Verificar la eficiencia de control de diferentes estrategias de protección foliar de trigo
+- Estimar respuesta de rendimiento y su relación costo-beneficio
+
+## Protocolo {-}
+
+“Our ability to understand a phenomenon is proportional to our ability to measure it”
+Lord Kelvin (1824-1907) 
+
+“How can plant pathologists apply advanced statistical procedures or develop quantitative models based upon disease assessment data of unknown accuracy and precision?”
+David Mackenzie, 1979
+
+“Without quantification of disease, no studies in epidemiology, no 
+assessment of crop losses, and no plant disease surveys and 
+their applications would be possible”
+Kranz, 1988
+
+“The cornerstone of epidemic analysis”
+Campbell and Neher, 1994
+
+> "If it weren't for my lawyer, I'd still be in prison.
+>  It went a lot faster with two people digging."
+>
+> `r tufte::quote_footer('--- Joe Martin')`
+
+<!--chapter:end:index.Rmd-->
+
+
+
+
+<!--chapter:end:0-data.Rmd-->
+
+
+# 1) Cargamos datos y paquetes ##
+
+Placeholder
+
+
+## Olivo/bacteriosis ---
+
+<!--chapter:end:1_1-inc_sev.Rmd-->
+
+
+# DSI 
+
+Placeholder
+
+
+## Poroto/sclerotinia 
+
+<!--chapter:end:1_2-DSI.Rmd-->
+
+
+# Area bajo la curva de progreso 
+
+Placeholder
+
+
+
+<!--chapter:end:1_3-auc.Rmd-->
+
+
+# Setup 
+
+Placeholder
+
+
+
+<!--chapter:end:2_1-pliman.Rmd-->
+
+
+
+## Dataset
+## Lin's concordance 
+## Interrater reliability
+### No aid old
+
+<!--chapter:end:2_2-sad_juan.Rmd-->
+

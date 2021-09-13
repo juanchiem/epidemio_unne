@@ -1,25 +1,25 @@
----
-title: "Severidad, incidencia, prevalencia"
----
+
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
                       warning = FALSE, 
                       message = FALSE, 
-                      eval=TRUE, 
+                      eval=FALSE, 
                       fig.width = 12, 
                       fig.height = 8)
 options(width = 90)
 ```
 
-# 1) Cargamos datos y paquetes ##
+# Métricas báscias
 
-```{r, include=FALSE}
+1) Cargamos datos y paquetes
+
+```{r}
 library(tidyverse)
 load("data/data.RData")
 ```
 
-## Olivo/bacteriosis ---
+Olivo/bacteriosis ---
 
 ```{r}
 olivo %>% view
@@ -27,7 +27,7 @@ olivo %>% view
 
 > dataset formato "wide" (planilla de campo) con 30 columnas de sev por arbol individual [datos simulados]
 
-# 2) Re-estructuracion ---
+2) Re-estructuracion ---
 
 Pasamos de formato wide a long para hacer operaciones por grupos. 
 Ojo: No siempre debe hacerse este paso aunque nos habilita a group_by()+ summarise()
@@ -67,7 +67,7 @@ oli_long %>%
   print(n=30)
 ```
 
-# 3) Incidencia ---
+## Incidencia 
 
 (nivel lote - evolución interanual)
 
@@ -120,7 +120,7 @@ oli_inc %>%
   facet_grid(. ~ loc)
 ```
 
-# 4) Prevalencia ---
+## Prevalencia 
 
 Nivel región - evolución interanual
 
@@ -147,7 +147,7 @@ oli_prev %>%
   geom_line(aes(group=loc))
 ```
 
-# 5) Severidad
+## Severidad
 
 Calculamos ambas severidades vistas en la introducción teórica
 
@@ -189,7 +189,7 @@ oli_sev %>%
   scale_x_discrete(guide = guide_axis(n.dodge = 2)) 
 ```
 
-# Bonus
+- Bonus
 
 Soja es el típico dataset de un experimento de campo donde evaluamos severidad y rendimiento de las parcelas
 
